@@ -1,0 +1,46 @@
+.overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.5); /* Semi-transparent background */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000; /* Ensure it's above other elements */
+  }
+  
+  .overlay-card {
+    background: white;
+    border-radius: 15px; /* Rounded corners */
+    padding: 20px;
+    max-width: 90%;
+    max-height: 90%;
+    overflow: auto;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.3); /* Optional: Add a box shadow */
+    z-index: 1001;
+  }
+  
+  .overlay-backdrop {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+  }
+  
+  .overlay-card h1,
+  .overlay-card h2,
+  .overlay-card h3 {
+    margin-top: 16px;
+    margin-bottom: 16px;
+  }
+  
+  .overlay-card ul,
+  .overlay-card ol {
+    margin-top: 8px;
+    margin-bottom: 8px;
+    padding-left: 20px;
+  }
+  
