@@ -29,50 +29,49 @@ const SideBar = React.memo(({ APIResponse }) => {
     );
 });
 
-const Overlay = React.memo(({ node, setSelectedNode, nodes, handleClick }) => {
+const Overlay = React.memo(({ node, setSelectedNode, nodes }) => {
+    // This will run whenever node changes and it will update the links
     useEffect(() => {
-        // Find all custom link elements after the component is rendered
-        const customLinks = document.querySelectorAll('.custom-link');
+        // Ensure that the DOM has been updated
+        setTimeout(() => {
+            const customLinks = document.querySelectorAll('.custom-link');
 
-        // Add click event listeners to these elements
-        customLinks.forEach((linkElement) => {
-            linkElement.addEventListener('click', (event) => {
-                event.preventDefault();
-                event.stopPropagation();
-
-                // Find the node corresponding to this custom link
-                const targetNode = nodes.find((n) => n.name === linkElement.textContent);
-                if (targetNode) {
-                    // Set the node as the selected node to update the overlay content
-                    handleClick(targetNode);
-                }
+            customLinks.forEach(link => {
+                const nodeName = link.getAttribute('data-node-name');
+                link.addEventListener('click', (event) => {
+                    event.preventDefault();
+                    const targetNode = nodes.find(n => n.name === nodeName);
+                    if (targetNode) {
+                        setSelectedNode(targetNode);
+                    }
+                });
             });
-        });
+        }, 0);
 
-        // Clean up event listeners when the component is unmounted
+        // Cleanup the event listeners when the component unmounts or updates
         return () => {
-            customLinks.forEach((linkElement) => {
-                linkElement.removeEventListener('click', null);
+            const customLinks = document.querySelectorAll('.custom-link');
+            customLinks.forEach(link => {
+                link.removeEventListener('click', null);
             });
         };
-    }, [nodes, setSelectedNode, handleClick]);
+    }, [node, setSelectedNode, nodes]);
 
     // Parse the content with markdown first
     const rawHtml = marked(node.content || '');
 
-    // Replace [[...]] with HTML anchor tags
-    const enhancedHtml = rawHtml.replace(/\[\[([^\]]+)\]\]/g, '<a href="#" class="custom-link">$1</a>');
+    // Replace [[...]] with HTML anchor tags that include data attributes for the node name
+    const enhancedHtml = rawHtml.replace(/\[\[([^\]]+)\]\]/g, (_, nodeName) => `<a href="#" class="custom-link" data-node-name="${nodeName}">${nodeName}</a>`);
 
     return (
-        <div className="overlay" >
-            <div className="overlay-card" onClick={(e) => e.stopPropagation()}>
+        <div className="overlay" onClick={(e) => e.stopPropagation()}>
+            <div className="overlay-card">
                 <h1>{node.name}</h1>
-                <div dangerouslySetInnerHTML={{ __html: enhancedHtml }}></div>
+                <div dangerouslySetInnerHTML={{ __html: enhancedHtml }} />
             </div>
         </div>
     );
 });
-
 
 const App = ({ APIResponse }) => {
     const [notes, setNotes] = useState([]);
@@ -123,9 +122,9 @@ const App = ({ APIResponse }) => {
         // Aim at node from outside it
         //needs to be from handle click otherwise cant find coords
         //setSelectedNode(node);
-        debugger;
+        //debugger;
 
-        const distance = 40;
+        const distance = 60;
         const distRatio = 1 + distance / Math.hypot(node.x, node.y, node.z);
 
         myGraphRef.current.cameraPosition(
@@ -141,10 +140,10 @@ const App = ({ APIResponse }) => {
         if (APIResponse) {
             const matchingNode = nodes.find(node => node.name.toLowerCase() === APIResponse.file_name.toLowerCase());
             if (matchingNode) {
-                handleClick(matchingNode);
+                setSelectedNode(matchingNode);
             }
         }
-    }, [APIResponse, nodes, handleClick]);
+    }, [APIResponse]);
 
     return (
         <div className="graph-container" >
@@ -176,8 +175,12 @@ const App = ({ APIResponse }) => {
 
                     return group;
                 }}
-                onNodeClick={handleClick}
+                onNodeClick={node => {
+                    console.log("Clicked node:", node);
+                    setSelectedNode(node);
+                }}
             />
+            {selectedNode && <Overlay node={selectedNode} setSelectedNode={setSelectedNode} nodes={nodes} />}
 
             {APIResponse && <SideBar APIResponse={APIResponse} />}
 
@@ -185,6 +188,5 @@ const App = ({ APIResponse }) => {
 
     );
 };
-//            {selectedNode && <Overlay node={selectedNode} setSelectedNode={setSelectedNode} nodes={nodes} handleClick={handleClick} />}
 
 export default App;

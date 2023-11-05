@@ -45,6 +45,10 @@ body {
   margin-bottom: 16px;
 }
 
+.overlay-card h2{
+  font-size: large;
+}
+
 .overlay-card ul,
 .overlay-card ol {
   margin-top: 8px;
