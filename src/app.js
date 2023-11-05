@@ -1,44 +1,9 @@
-import React, { useEffect, useState } from 'react';
-import { ForceGraph3D } from 'react-force-graph';
-import { marked } from 'marked';
-import * as THREE from 'three';
+import React, { useEffect, useState, useMemo, useRef, useCallback } from 'react'
+import { ForceGraph3D } from 'react-force-graph'
+import { marked } from 'marked'
+import * as THREE from 'three'
 import './main.css'
-
-
-const makeTextSprite = (message) => {
-    const fontface = 'Arial';
-    const fontsize = 12;
-    const canvas = document.createElement('canvas');
-    const context = canvas.getContext('2d');
-    context.font = `${fontsize}px ${fontface}`;
-
-    // Get text metrics
-    const metrics = context.measureText(message);
-    const textWidth = metrics.width;
-
-    // Set canvas dimensions dynamically
-    const padding = 10; // Extra padding around the text
-    canvas.width = textWidth + padding;
-    canvas.height = fontsize + padding;
-
-    // Re-apply text to fill canvas
-    context.clearRect(0, 0, canvas.width, canvas.height);
-    context.font = `${fontsize}px ${fontface}`;
-    context.fillStyle = 'rgba(255, 255, 255, 1.0)';
-    context.fillText(message, padding / 2, fontsize + padding / 2);
-
-    // Create texture
-    const texture = new THREE.Texture(canvas);
-    texture.needsUpdate = true;
-
-    // Create sprite material
-    const spriteMaterial = new THREE.SpriteMaterial({ map: texture });
-
-    // Create sprite
-    const sprite = new THREE.Sprite(spriteMaterial);
-    sprite.scale.set(canvas.width / 10, canvas.height / 10, 1);
-    return sprite;
-};
+import { makeTextSprite } from './utilities/makeTextSprite'
 
 //find links for each node 
 const parseNote = (note) => {
@@ -50,7 +15,21 @@ const parseNote = (note) => {
     };
 };
 
-const Overlay = ({ node, closeOverlay, setSelectedNode, nodes }) => {
+const SideBar = React.memo(({ APIResponse }) => {
+    return (
+        <div className="sidebar">
+            <div className="diagnostics">
+                <div className="time">Processing Time: {parseFloat(APIResponse.diagnostics.processing_time_sec).toFixed(2)}s</div>
+                <div className="version">Version: {APIResponse.diagnostics.llm_version}</div>
+            </div>
+            <div className="response">
+                {APIResponse.response}
+            </div>
+        </div>
+    );
+});
+
+const Overlay = React.memo(({ node, setSelectedNode, nodes, handleClick }) => {
     useEffect(() => {
         // Find all custom link elements after the component is rendered
         const customLinks = document.querySelectorAll('.custom-link');
@@ -65,7 +44,7 @@ const Overlay = ({ node, closeOverlay, setSelectedNode, nodes }) => {
                 const targetNode = nodes.find((n) => n.name === linkElement.textContent);
                 if (targetNode) {
                     // Set the node as the selected node to update the overlay content
-                    setSelectedNode(targetNode);
+                    handleClick(targetNode);
                 }
             });
         });
@@ -76,7 +55,7 @@ const Overlay = ({ node, closeOverlay, setSelectedNode, nodes }) => {
                 linkElement.removeEventListener('click', null);
             });
         };
-    }, [nodes, setSelectedNode]);
+    }, [nodes, setSelectedNode, handleClick]);
 
     // Parse the content with markdown first
     const rawHtml = marked(node.content || '');
@@ -85,21 +64,22 @@ const Overlay = ({ node, closeOverlay, setSelectedNode, nodes }) => {
     const enhancedHtml = rawHtml.replace(/\[\[([^\]]+)\]\]/g, '<a href="#" class="custom-link">$1</a>');
 
     return (
-        <div className="overlay" onClick={closeOverlay}>
+        <div className="overlay" >
             <div className="overlay-card" onClick={(e) => e.stopPropagation()}>
                 <h1>{node.name}</h1>
                 <div dangerouslySetInnerHTML={{ __html: enhancedHtml }}></div>
             </div>
         </div>
     );
-};
+});
 
 
-const App = () => {
-    const closeOverlay = () => setSelectedNode(null);
-    const [selectedNode, setSelectedNode] = useState(null);
+const App = ({ APIResponse }) => {
     const [notes, setNotes] = useState([]);
+    const [selectedNode, setSelectedNode] = useState(null);
+    const myGraphRef = useRef();
 
+    // pull documents from documents server
     useEffect(() => {
         fetch('http://localhost:3001/api/notes')
             .then(response => response.json())
@@ -113,37 +93,71 @@ const App = () => {
             });
     }, []);
 
-    let counter = 1;
-    const nodes = notes.map(note => ({ id: counter++, name: note.title, content: marked(note.content) }));
-    const links = [];
+    // convert each document into a node with [[ ]] being the link between nodes
+    // memoized to prevent unnecessary useEffect invocations
+    const { nodes, links } = useMemo(() => {
+        let counter = 1;
+        const nodes = notes.map(note => ({ id: counter++, name: note.title, content: marked(note.content) }));
+        const links = [];
 
-    notes.forEach(note => {
-        const { title, links: linkedNotes } = parseNote(note);
-        linkedNotes.forEach(linkedNote => {
-            const sourceNode = nodes.find(node => node.name === title);
-            const targetNode = nodes.find(node => node.name === linkedNote);
-            if (sourceNode && targetNode) {
-                links.push({ source: sourceNode.id, target: targetNode.id });
-            }
+        notes.forEach(note => {
+            const { title, links: linkedNotes } = parseNote(note);
+            linkedNotes.forEach(linkedNote => {
+                const sourceNode = nodes.find(node => node.name === title);
+                const targetNode = nodes.find(node => node.name === linkedNote);
+                if (sourceNode && targetNode) {
+                    links.push({ source: sourceNode.id, target: targetNode.id });
+                }
+            });
         });
-    });
+
+        return { nodes, links };
+    }, [notes]);
 
     const myGraph = {
         nodes,
         links
     };
 
+    const handleClick = useCallback((node) => {
+        // Aim at node from outside it
+        //needs to be from handle click otherwise cant find coords
+        //setSelectedNode(node);
+        debugger;
+
+        const distance = 40;
+        const distRatio = 1 + distance / Math.hypot(node.x, node.y, node.z);
+
+        myGraphRef.current.cameraPosition(
+            { x: node.x * distRatio, y: node.y * distRatio, z: node.z * distRatio }, // new position
+            node, // lookAt target ({ x, y, z })
+            3000  // ms transition duration
+        )
+    }, []);
+
+
+    //finding the most related item to do with search term
+    useEffect(() => {
+        if (APIResponse) {
+            const matchingNode = nodes.find(node => node.name.toLowerCase() === APIResponse.file_name.toLowerCase());
+            if (matchingNode) {
+                handleClick(matchingNode);
+            }
+        }
+    }, [APIResponse, nodes, handleClick]);
+
     return (
-        <div onClick={closeOverlay}>
+        <div className="graph-container" >
             <ForceGraph3D
+                ref={myGraphRef}
                 graphData={myGraph}
                 nodeLabel="name"
                 nodeAutoColorBy="id"
                 linkDirectionalArrowLength={0}
                 linkDirectionalArrowRelPos={1}
                 nodeRelSize={1}
-                gravity={-500} 
-                linkWidth={0.5} 
+                gravity={-500}
+                linkWidth={0.5}
                 nodeThreeObject={(node) => {
 
                     // create group
@@ -157,20 +171,20 @@ const App = () => {
 
                     // create text sprite
                     const sprite = makeTextSprite(node.name);
-                    sprite.position.set(0, -0.6, 0);
+                    sprite.position.set(0, -0.8, 0);
                     group.add(sprite);
 
                     return group;
                 }}
-                onNodeClick={node => {
-                    console.log("Clicked node:", node);
-                    setSelectedNode(node);
-                }}
+                onNodeClick={handleClick}
             />
-            {selectedNode && <Overlay node={selectedNode} closeOverlay={closeOverlay} setSelectedNode={setSelectedNode} nodes={nodes} />}
+
+            {APIResponse && <SideBar APIResponse={APIResponse} />}
+
         </div>
 
     );
 };
+//            {selectedNode && <Overlay node={selectedNode} setSelectedNode={setSelectedNode} nodes={nodes} handleClick={handleClick} />}
 
 export default App;

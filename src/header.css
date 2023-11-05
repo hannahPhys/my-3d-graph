@@ -1,0 +1,50 @@
+.header {
+  width: 70%;
+  padding: 10px;
+  background-color: #0c0622;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  position: fixed;
+  left: 50%;
+  transform: translate(-50%, 0);
+  top: 0;
+  z-index: 1000;
+  border-radius: 0 0 20px 20px;
+}
+
+.search-container {
+  position: relative;
+  display: flex;
+  align-items: center;
+  color: #333;
+}
+
+.search-input {
+  color: white;
+  width: 80%;
+  border: none;
+  border-bottom: 2px solid transparent;
+  outline: none;
+  font-size: 16px;
+  padding: 5px 5px 5px 35px;
+  background-color: transparent;
+  z-index: 1;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Class to apply the spinning animation */
+.spin {
+  animation: spin 1s linear infinite;
+}
+.search-icon {
+  position: absolute;
+  left: 10px;
+  font-size: 16px;
+}
