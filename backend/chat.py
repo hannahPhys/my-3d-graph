@@ -2,25 +2,24 @@
 from flask import Flask, request, jsonify
 from flask_cors import CORS, cross_origin 
 
-from llama_index import SimpleDirectoryReader, LLMPredictor, PromptHelper
-from llama_index import (
-    VectorStoreIndex,
-    get_response_synthesizer,
-)
+from llama_index import SimpleDirectoryReader, LLMPredictor, PromptHelper, VectorStoreIndex, get_response_synthesizer
 from llama_index.retrievers import VectorIndexRetriever
 from llama_index.query_engine import RetrieverQueryEngine
 from llama_index.indices.postprocessor import SimilarityPostprocessor
-
 
 from langchain.chat_models import ChatOpenAI
 import sys
 import os
 import time
+from dotenv import load_dotenv
+load_dotenv()  # This loads the environment variables from `.env`.
+
+import openai
+api_key = os.getenv('OPENAI_API_KEY')
+openai.api_key = api_key
 
 app = Flask(__name__)
 CORS(app)
-
-os.environ["OPENAI_API_KEY"] = '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'
 
 def construct_index(directory_path):
     max_input_size = 4096
@@ -41,7 +40,7 @@ def construct_index(directory_path):
 
     return index
 
-index = construct_index("./backend/docs")
+index = construct_index("/Users/user/Library/Mobile Documents/iCloud~md~obsidian/Documents/Everything/QuantaReality")
 
 def chatbot(input_text):
     retriever = VectorIndexRetriever(
