@@ -12,7 +12,7 @@ import sys
 import os
 import time
 from dotenv import load_dotenv
-load_dotenv()  # This loads the environment variables from `.env`.
+load_dotenv()  
 
 import openai
 api_key = os.getenv('OPENAI_API_KEY')
@@ -32,7 +32,6 @@ def construct_index(directory_path):
     llm_predictor = LLMPredictor(llm=ChatOpenAI(temperature=0.3, model_name="gpt-4", max_tokens=num_outputs))
 
     documents = SimpleDirectoryReader(directory_path, filename_as_id=True).load_data()
-    #tested and doc text gives correct output
 
     index = VectorStoreIndex(documents, llm_predictor=llm_predictor, prompt_helper=prompt_helper)
     index.storage_context.persist(persist_dir='index.json')
@@ -40,7 +39,7 @@ def construct_index(directory_path):
 
     return index
 
-index = construct_index("/Users/user/Library/Mobile Documents/iCloud~md~obsidian/Documents/Everything/QuantaReality")
+index = construct_index("./backend/docs")
 
 def chatbot(input_text):
     retriever = VectorIndexRetriever(
