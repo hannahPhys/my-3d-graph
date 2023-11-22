@@ -21,6 +21,8 @@ openai.api_key = api_key
 app = Flask(__name__)
 CORS(app)
 
+model_name="gpt-4-1106-preview"
+temperature=0.7
 def construct_index(directory_path):
     max_input_size = 4096
     num_outputs = 512
@@ -29,7 +31,7 @@ def construct_index(directory_path):
 
     prompt_helper = PromptHelper(max_input_size, num_outputs, chunk_overlap_ratio, chunk_size_limit=chunk_size_limit)
 
-    llm_predictor = LLMPredictor(llm=ChatOpenAI(temperature=0.3, model_name="gpt-4", max_tokens=num_outputs))
+    llm_predictor = LLMPredictor(llm=ChatOpenAI(temperature=temperature, model_name=model_name, max_tokens=num_outputs))
 
     documents = SimpleDirectoryReader(directory_path, filename_as_id=True).load_data()
 
@@ -80,8 +82,9 @@ def chatbot_endpoint():
    # Diagnostic information
     diagnostics = {
         "processing_time_sec": processing_time,
-        "llm_version": "gpt-4",  # or dynamically fetch this if your model might change
         "server_time": time.strftime("%Y-%m-%d %H:%M:%S", time.gmtime()),
+        "llm_version": model_name,  
+        "temperature": temperature
     }
 
     response_data = {

@@ -21,6 +21,7 @@ const SideBar = React.memo(({ APIResponse }) => {
             <div className="diagnostics">
                 <div className="time">Processing Time: {parseFloat(APIResponse.diagnostics.processing_time_sec).toFixed(2)}s</div>
                 <div className="version">Version: {APIResponse.diagnostics.llm_version}</div>
+                <div className="temperature">Version: {APIResponse.diagnostics.temperature}</div>
             </div>
             <div className="response">
                 {APIResponse.response}
@@ -55,7 +56,7 @@ const Overlay = React.memo(({ node, setSelectedNode, nodes }) => {
                 link.removeEventListener('click', null);
             });
         };
-    }, [node, setSelectedNode, nodes]);
+    }, [setSelectedNode]);
 
     // Parse the content with markdown first
     const rawHtml = marked(node.content || '');
@@ -156,7 +157,7 @@ const App = ({ APIResponse }) => {
                 linkDirectionalArrowRelPos={1}
                 nodeRelSize={1}
                 gravity={-500}
-                linkWidth={0.5}
+                linkWidth={0.1}
                 nodeThreeObject={(node) => {
 
                     // create group
