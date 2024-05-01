@@ -5,6 +5,7 @@
 ## Overview
 
 This Knowledge Navigator is a React-based web application designed to interact with a Chatbot API and render content with interconnected nodes. Users can search for topics using natural language queries. The results are returned from a backend API, and relevant nodes are displayed within the web interface. Nodes are interconnected using a wikilink-style system, allowing users to navigate through related content.
+This includes my personal mindmap initially created on obsidian. Includes my personal fav topics for learning including quantum physics, space time, black hole theories, metaphysics connections. 
 
 ## Features
 
