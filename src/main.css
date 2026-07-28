@@ -2,6 +2,11 @@ body {
   margin: 0px;
 }
 
+.graph-container {
+  width: 100vw;
+  height: 100vh;
+}
+
 .overlay {
   position: fixed;
   top: 50px;

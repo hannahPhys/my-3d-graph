@@ -77,7 +77,14 @@ const Overlay = React.memo(({ node, setSelectedNode, nodes }) => {
 const App = ({ APIResponse }) => {
     const [notes, setNotes] = useState([]);
     const [selectedNode, setSelectedNode] = useState(null);
+    const [dimensions, setDimensions] = useState({ width: window.innerWidth, height: window.innerHeight });
     const myGraphRef = useRef();
+
+    useEffect(() => {
+        const handleResize = () => setDimensions({ width: window.innerWidth, height: window.innerHeight });
+        window.addEventListener('resize', handleResize);
+        return () => window.removeEventListener('resize', handleResize);
+    }, []);
 
     // pull documents from documents server
     useEffect(() => {
@@ -150,6 +157,8 @@ const App = ({ APIResponse }) => {
         <div className="graph-container" >
             <ForceGraph3D
                 ref={myGraphRef}
+                width={dimensions.width}
+                height={dimensions.height}
                 graphData={myGraph}
                 nodeLabel="name"
                 nodeAutoColorBy="id"

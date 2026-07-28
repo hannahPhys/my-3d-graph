@@ -1,0 +1,16 @@
+{
+  "name": "my-3d-graph-notes-server",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Mirrors an Obsidian vault to local disk and serves it as /api/notes for the 3d-graph frontend",
+  "main": "notes-server.js",
+  "scripts": {
+    "start": "node notes-server.js"
+  },
+  "dependencies": {
+    "chokidar": "^3.6.0",
+    "cors": "^2.8.5",
+    "express": "^4.18.2",
+    "fs-extra": "^10.0.0"
+  }
+}
