@@ -2,6 +2,8 @@ import React, { useState } from 'react'
 import './header.css';
 import icon from './utilities/icon.png'
 
+const ASK_URL = process.env.NODE_ENV === 'production' ? '/api/ask' : 'http://127.0.0.1:5000/chatbot';
+
 const Header = ({ onSearch }) => {
     const [isSearching, setIsSearching] = useState(false);
 
@@ -13,7 +15,7 @@ const Header = ({ onSearch }) => {
         const input_text = event.target.elements.search.value;
         console.log('ask chatbox api: ', input_text)
         try {
-            const response = await fetch('http://127.0.0.1:5000/chatbot', {
+            const response = await fetch(ASK_URL, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',

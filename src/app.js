@@ -5,6 +5,8 @@ import * as THREE from 'three'
 import './main.css'
 import { makeTextSprite } from './utilities/makeTextSprite'
 
+const NOTES_URL = process.env.NODE_ENV === 'production' ? '/notes.json' : 'http://localhost:3001/api/notes';
+
 //find links for each node 
 const parseNote = (note) => {
     const { title, content } = note;
@@ -88,7 +90,7 @@ const App = ({ APIResponse }) => {
 
     // pull documents from documents server
     useEffect(() => {
-        fetch('http://localhost:3001/api/notes')
+        fetch(NOTES_URL)
             .then(response => response.json())
             .then(data => {
                 if (Array.isArray(data)) {
